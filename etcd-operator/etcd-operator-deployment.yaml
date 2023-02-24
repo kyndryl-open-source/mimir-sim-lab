@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    name: etcdoperator
+  name: etcd-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: etcd-operator
+  template:
+    metadata:
+      labels:
+        name: etcd-operator
+    spec:
+      serviceAccountName: etcd-operator-sa
+      containers:
+      - name: etcd-operator
+        image: quay.io/coreos/etcd-operator:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - etcd-operator
+        - --create-crd=false
+        - -cluster-wide
+        ports:
+        - name: http-metrics
+          containerPort: 8080
+          protocol: TCP
+        resources:
+          requests:
+            memory: "200Mi"
+            cpu: "500m"
+          limits:
+            memory: "500Mi"
+            cpu: "1000m"
+        env:
+        - name: MY_POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
